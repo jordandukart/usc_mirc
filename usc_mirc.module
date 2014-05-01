@@ -43,11 +43,24 @@ function usc_mirc_menu() {
     'page callback' => 'usc_mirc_ingest_page',
     'page arguments' => array(2),
   );
+  $items['usc/preservation-master-autocomplete'] = array(
+    'page callback' => 'usc_mirc_autocomplete_preservation_master',
+    'page arguments' => array(2),
+    'access callback' => 'usc_mirc_role_access_callback',
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/autocomplete.inc',
+  );
   $items['usc/mezzanine-autocomplete'] = array(
     'page callback' => 'usc_mirc_autocomplete_video_url',
     'page arguments' => array(
-      variable_get('usc_mirc_mezzanine_url', '/mnt/mirc/mezz/mezzanine'),
-      variable_get('usc_mirc_mezzanine_folder', '/mnt/mirc/mezz/mezzanine'),
+      array(
+        'var' => 'usc_mirc_mezzanine_url',
+        'default' => '/mnt/mirc/mezz/mezzanine',
+      ),
+      array(
+        'var' => 'usc_mirc_mezzanine_folder',
+        'default' => '/mnt/mirc/mezz/mezzanine',
+      ),
       2,
     ),
     'access callback' => 'usc_mirc_role_access_callback',
@@ -56,8 +69,14 @@ function usc_mirc_menu() {
   $items['usc/streaming-autocomplete'] = array(
     'page callback' => 'usc_mirc_autocomplete_video_url',
     'page arguments' => array(
-      variable_get('usc_mirc_streaming_url', 'http://dvr-streaming.mirc.sc.edu'),
-      variable_get('usc_mirc_streaming_folder', '/mnt/mirc/mezz/access'),
+      array(
+        'var' => 'usc_mirc_streaming_url',
+        'default' => 'http://dvr-streaming.mirc.sc.edu',
+      ),
+      array(
+        'var' => 'usc_mirc_streaming_folder',
+        'default' => '/mnt/mirc/mezz/access',
+      ),
       2,
     ),
     'access callback' => 'usc_mirc_role_access_callback',
@@ -185,6 +204,19 @@ function usc_mirc_usc_collectionCModel_islandora_ingest_steps($form_state) {
         'function' => 'usc_mirc_undo_root_policy',
         'args' => array(),
       ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_CModel_islandora_ingest_steps().
+ */
+function usc_mirc_usc_vroCModel_islandora_ingest_steps() {
+  return array(
+    'usc_preservation_master' => array(
+      'weight' => -1,
+      'type' => 'form',
+      'form_id' => 'usc_mirc_add_preservation_master_form',
     ),
   );
 }
@@ -435,7 +467,7 @@ function usc_mirc_islandora_required_objects(IslandoraTuque $connection) {
   $datastream->setContentFromFile("$module_path/data/datastreams/usc_mezzanineCModel/DS-COMPOSITE-MODEL.xml", FALSE);
   $usc_mezzanine->ingestDatastream($datastream);
   return array(
-    'MIRC@SC' => array(
+    'usc_mirc' => array(
       'title' => 'MIRC@SC',
       'objects' => array(
         $usc_root_collection,
@@ -932,6 +964,70 @@ function usc_mirc_flowplayer_markup(FedoraObject $object) {
 }
 
 /**
+ * The form for adding a preservation master.
+ *
+ * @param array $form
+ *   A Drupal form.
+ *
+ * @param array $form_state
+ *   The Drupal form state.
+ *
+ * @return array
+ *   The add a preservation master form definition.
+ */
+function usc_mirc_add_preservation_master_form($form, &$form_state) {
+  // Get the taxonomy values for the three fields.
+  // @TODO: Actually do this and add them to the install.
+  $form['directory_path'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Preservation Master folder file path'),
+    '#description' => t('Used to extract technical metadata.'),
+    '#autocomplete_path' => 'usc/preservation-master-autocomplete',
+    '#weight' => -20,
+    '#required' => TRUE,
+  );
+  $pres_taxonomies = array(
+    ''
+  );
+  return $form;
+}
+
+function usc_mirc_add_preservation_master_form_validate($form, &$form_state) {
+  $directory_path = $form_state['values']['directory_path'];
+  if (!is_dir($directory_path)) {
+    form_error($form['directory_path'], t('The specified directory path does not exist!'));
+  }
+  else {
+    $dpx_file = FALSE;
+    foreach (new DirectoryIterator($directory_path) as $file) {
+      if ($file->isFile()) {
+        if ($file->getExtension() !== 'DPX') {
+          continue;
+        };
+        $dpx_file = $file->getPathname();
+        break;
+      }
+    }
+    if (!$dpx_file) {
+      form_error($form['directory_path'], t('The specified directory @path does not containing a valid DPX file!', array('@path' => $directory_path)));
+    }
+    else {
+      $form_state['usc_mirc_dpx_file'] = $dpx_file;
+    }
+  }
+}
+
+function usc_mirc_add_preservation_master_form_submit($form, &$form_state) {
+  $shell_script_path = drupal_realpath(drupal_get_path('module', 'usc_mirc') . '/transforms/pbcore_from_dpx.sh');
+  $output = array();
+  exec(escapeshellcmd("{$shell_script_path} {$form_state['usc_mirc_dpx_file']}"), $output);
+  $imagemagick_output = implode("\n", $output);
+
+
+}
+
+
+/**
  * The form for adding a mezzanine.
  *
  * @param array $form
@@ -1113,9 +1209,10 @@ function usc_mirc_add_access_variant_form_submit($form, &$form_state) {
 /**
  * Autocomplete callback used to obtain streaming URLs.
  */
-function usc_mirc_autocomplete_video_url($url_base, $filesystem_base, $string) {
+function usc_mirc_autocomplete_video_url($url_base_var, $filesystem_base_var, $string) {
   module_load_include('inc', 'usc_mirc', 'includes/autocomplete');
-
+  $url_base = variable_get($url_base_var['var'], $url_base_var['default']);
+  $filesystem_base = variable_get($filesystem_base_var['var'], $filesystem_base_var['default']);
   $videos = usc_mirc_traverse_directory($url_base, $filesystem_base, $string);
   $videos = array_filter($videos, 'usc_mirc_is_video_filename');
 

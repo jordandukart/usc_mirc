@@ -1,0 +1,15 @@
+<pbcoreInstantiationDocument xmlns="http://www.pbcore.org/PBCore/PBCoreNamespace.html">
+    <instantiationIdentifier source="filename">%f</instantiationIdentifier>
+    <instantiationDate dateType="created">%[date:created]</instantiationDate>
+    <instantiationColors>%[colorspace]</instantiationColors>
+    <instantiationLocation>%d</instantiationLocation>
+    <instantiationFileSize>%%[total_size]</instantiationFileSize>
+    <instantiationEssenceTrack>
+        <essenceTrackType>Video</essenceTrackType>
+        <essenceTrackStandard>%m</essenceTrackStandard>
+        <essenceTrackBitDepth>%z</essenceTrackBitDepth>
+        <essenceTrackFrameRate>%[dpx:film.frame_rate]</essenceTrackFrameRate>
+        <essenceTrackFrameSize>%G</essenceTrackFrameSize>
+        <essenceTrackAspectRatio source="pixel aspect ratio">%[dpx:orientation.aspect_ratio]</essenceTrackAspectRatio>
+    </instantiationEssenceTrack>
+</pbcoreInstantiationDocument>

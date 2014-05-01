@@ -18,6 +18,23 @@ function usc_mirc_install() {
     'edge-to-edge' => 'Edge-to-edge/Full frame (including perfs)',
     'cropped' => 'Cropped',
   );
+
+  $stabilization = array(
+    'yes' => 'This digital element has undergone software stabilization.',
+    'no' => 'No',
+  );
+
+  $optical_sound = array(
+    'yes' => 'This scan includes an optical soundtrack.',
+    'no' => 'No',
+  );
+
+  $equipment = array(
+    'kinetta' => 'Kinetta',
+    'scanstation' => 'ScanStation',
+    'colorlab' => 'Scanned by ColorLab',
+  );
+
   $type_vocab = array(
     'name' => 'Derivative Type',
     'machine_name' => 'usc_mirc_mezzanine_type_vocab',
@@ -32,8 +49,32 @@ function usc_mirc_install() {
   );
   taxonomy_vocabulary_save((object) $format_vocab);
 
+  $stabilization_vocab = array(
+    'name' => 'Stabilization',
+    'machine_name' => 'usc_mirc_preservation_stabilization_vocab',
+    'description' => 'Whether this preservation master has stabilization.',
+  );
+  taxonomy_vocabulary_save((object) $stabilization_vocab);
+
+  $optical_vocab = array(
+    'name' => 'Optical Sound',
+    'machine_name' => 'usc_mirc_preservation_optical_sound_vocab',
+    'description' => 'Whether this preservation master has optical sound.',
+  );
+  taxonomy_vocabulary_save((object) $optical_vocab);
+
+  $equipment_vocab = array(
+    'name' => 'Equipment',
+    'machine_name' => 'usc_mirc_preservation_equipment_vocab',
+    'description' => 'What equipment was used on the preservation master.',
+  );
+  taxonomy_vocabulary_save((object) $equipment_vocab);
+
   $type_taxonomy = taxonomy_vocabulary_machine_name_load('usc_mirc_mezzanine_type_vocab');
   $format_taxonomy = taxonomy_vocabulary_machine_name_load('usc_mirc_mezzanine_format_vocab');
+  $stabilization_taxonomy = taxonomy_vocabulary_machine_name_load('usc_mirc_preservation_stabilization_vocab');
+  $optical_taxonomy = taxonomy_vocabulary_machine_name_load('usc_mirc_preservation_optical_sound_vocab');
+  $equipment_taxonomy = taxonomy_vocabulary_machine_name_load('usc_mirc_preservation_equipment_vocab');
 
   foreach ($types as $key => $type) {
     taxonomy_term_save((object) array(
@@ -47,6 +88,30 @@ function usc_mirc_install() {
     taxonomy_term_save((object) array(
       'name' => $format,
       'vid' => $format_taxonomy->vid,
+      'vocabulary_machine_name' => $key,
+    ));
+  }
+
+  foreach ($stabilization as $key => $stabs) {
+    taxonomy_term_save((object) array(
+      'name' => $stabs,
+      'vid' => $stabilization_taxonomy->vid,
+      'vocabulary_machine_name' => $key,
+    ));
+  }
+
+  foreach ($optical_sound as $key => $sound) {
+    taxonomy_term_save((object) array(
+      'name' => $sound,
+      'vid' => $optical_taxonomy->vid,
+      'vocabulary_machine_name' => $key,
+    ));
+  }
+
+  foreach ($equipment as $key => $equip) {
+    taxonomy_term_save((object) array(
+      'name' => $equip,
+      'vid' => $equipment_taxonomy->vid,
       'vocabulary_machine_name' => $key,
     ));
   }

@@ -53,6 +53,35 @@ function usc_mirc_admin_settings($form, &$form_state) {
       '#title' => t('Autocompletion'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
+      'preservation_autocomplete' => array(
+        '#type' => 'fieldset',
+        '#title' => t('Preservation autocompletion'),
+        '#collapsible' => TRUE,
+        'usc_mirc_preservation_folder' => array(
+          '#type' => 'textfield',
+          '#title' => t('Preservation folder'),
+          '#description' => t('Mountpoint/folder on server under which folders containing preservation master DPXs are located. (Used during preservation master autocompletion)'),
+          '#default_value' => variable_get('usc_mirc_preservation_folder', '/mnt/mirc/arch/archival'),
+        ),
+        'usc_mirc_preservation_stabilization_vocab' => array(
+          '#type' => 'textfield',
+          '#title' => t('Stabilization Taxonomy vocabulary'),
+          '#description' => t('A taxonomy to use for the select box in the preservation master ingest form. (There is a minimal default if it does not exist.)'),
+          '#default_value' => variable_get('usc_mirc_preservation_stabilization_vocab', 'usc_mirc_preservation_stabilization_vocab'),
+        ),
+        'usc_mirc_preservation_optical_sound_vocab'  => array(
+          '#type' => 'textfield',
+          '#title' => t('Optical Sound Taxonomy vocabulary'),
+          '#description' => t('A taxonomy to use for the select box in the preservation master ingest form. (There is a minimal default if it does not exist.)'),
+          '#default_value' => variable_get('usc_mirc_preservation_optical_sound_vocab', 'usc_mirc_preservation_optical_sound_vocab'),
+        ),
+        'usc_mirc_preservation_equiment_vocab'  => array(
+          '#type' => 'textfield',
+          '#title' => t('Equpiment Taxonomy vocabulary'),
+          '#description' => t('A taxonomy to use for the select box in the preservation master ingest form. (There is a minimal default if it does not exist.)'),
+          '#default_value' => variable_get('usc_mirc_preservation_equipment_vocab', 'usc_mirc_preservation_equipment_vocab'),
+        ),
+      ),
       'access_autocomplete' => array(
         '#type' => 'fieldset',
         '#title' => t('Access autocompletion'),

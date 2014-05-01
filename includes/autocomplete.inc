@@ -64,3 +64,23 @@ function usc_mirc_traverse_directory($url_base, $filesystem_base, $string, $sub_
   }
   return $videos;
 }
+
+/**
+ * Autocomplete functionality for selecting a preservation master directory.
+ *
+ * @param string $folder_name
+ *   The value being searched for in the autocomplete.
+ */
+function usc_mirc_autocomplete_preservation_master($folder_name) {
+  $folder_base = variable_get('usc_mirc_preservation_folder', '/mnt/mirc/arch/archival');
+  $all_folders = glob("{$folder_base}/*", GLOB_ONLYDIR);
+
+  $folders = array();
+  foreach ($all_folders as $path) {
+    if ($folder_name === '*' || strpos(basename($path), $folder_name) === 0) {
+      $folders[$path] = basename($path);
+    }
+  }
+  ksort($folders);
+  drupal_json_output($folders);
+}
